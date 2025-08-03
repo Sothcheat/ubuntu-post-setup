@@ -204,6 +204,7 @@ if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord,
 
   # Install Zen Browser via Flatpak
   sudo flatpak install --noninteractive flathub app.zen_browser.zen
+  sudo apt purge firefox
 
   # Install other apps via apt
   sudo apt install -y telegram-desktop discord kate vlc
