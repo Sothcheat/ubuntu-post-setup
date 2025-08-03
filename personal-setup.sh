@@ -198,8 +198,8 @@ step_start "🏷️ Setting hostname to 'ubuntu25'"
 sudo hostnamectl set-hostname ubuntu25
 step_end "Hostname set"
 
-# === Essential applications install (includes Zen Browser via Flatpak) ===
-if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord, Kate, VLC)?"; then
+# === Essential applications install (includes Zen Browser via Flatpak and Ghostty) ===
+if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord, Kate, VLC, Ghostty)?"; then
   step_start "📥 Installing essential applications"
 
   # Install Zen Browser via Flatpak
@@ -207,6 +207,16 @@ if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord,
 
   # Install other apps via apt
   sudo apt install -y telegram-desktop discord kate vlc
+
+  # Install Ghostty terminal emulator (no prompt)
+  step_start "📦 Installing Ghostty terminal"
+  GHOSTTY_BIN="$HOME/.local/bin/ghostty"
+  mkdir -p "$(dirname "$GHOSTTY_BIN")"
+  GHOSTTY_URL=$(curl -s https://api.github.com/repos/ghostty-org/ghostty/releases/latest | grep "browser_download_url.*linux-x86_64" | cut -d '"' -f4)
+  wget -qO "$GHOSTTY_BIN" "$GHOSTTY_URL"
+  chmod +x "$GHOSTTY_BIN"
+  log_info "Ghostty installed to $GHOSTTY_BIN"
+  step_end "Ghostty terminal installed"
 
   step_end "Essential applications installed"
 else
@@ -311,6 +321,23 @@ else
   log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
 fi
 
+# === Ghostty terminal configuration ===
+step_start "🖥️ Configuring Ghostty terminal"
+
+GHOSTTY_CONFIG_DIR="$HOME/.config/ghostty"
+GHOSTTY_CONFIG_FILE="$GHOSTTY_CONFIG_DIR/config"
+mkdir -p "$GHOSTTY_CONFIG_DIR"
+
+cat > "$GHOSTTY_CONFIG_FILE" <<EOF
+font-family = FiraCode Nerd Font
+font-size = 14
+background-opacity = 0.9
+theme = Everforest Dark - Hard
+EOF
+
+log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
+step_end "Ghostty terminal configured"
+
 # === Developer Tools ===
 if confirm "🖥️ Install development tools and languages (build-essential, git, python3, openjdk, nodejs, podman, docker)?"; then
   step_start "📦 Installing development tools and languages"
@@ -355,7 +382,7 @@ while true; do
       log_info "You chose GNOME."
       step_start "Installing GNOME Customization Applications"
       sudo apt install -y gnome-tweaks
-      flatpak install --noninteractive flathub com.mattjakeman.ExtensionManager || log_warn "Flatpak not installed or failed"
+      flatpak install --non-interactive flathub com.mattjakeman.ExtensionManager || log_warn "Flatpak not installed or failed"
       step_end "GNOME Customization installation"
       break
       ;;
