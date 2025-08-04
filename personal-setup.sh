@@ -364,23 +364,6 @@ log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
 
 step_end "Ghostty terminal configured"
 
-# === Developer Tools ===
-
-if confirm "🖥️ Install development tools and languages (build-essential, git, python3, openjdk, nodejs, podman, docker)?"; then
-
-  step_start "📦 Installing development tools and languages"
-
-  sudo apt install -y build-essential git python3-pip openjdk-21-jdk nodejs npm podman docker.io
-  sudo systemctl enable --now docker
-
-  step_end "Development tools installed"
-
-else
-
-  log_warn "Skipped developer tools installation"
-
-fi
-
 # === IDEs Installation ===
 
 if confirm "🖥️ Install developer IDEs (Visual Studio Code, IntelliJ IDEA Community, and NetBeans)?"; then
