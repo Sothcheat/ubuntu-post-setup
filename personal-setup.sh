@@ -265,44 +265,44 @@ fi
 
 if confirm "🛠️ Install and configure Zsh shell with Oh My Zsh and Oh My Posh prompt?"; then
 
-  step_start "⚙️ Installing Zsh, Oh My Zsh and Oh My Posh prompt setup"
+  step_start "⚙️ Installing Zsh, Oh My Zsh and Oh My Posh prompt setup"
 
-  sudo apt install -y zsh curl unzip wget
+  sudo apt install -y zsh curl unzip wget
 
-  # Install Oh My Zsh (unattended)
-  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
-    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-  else
-    log_info "Oh My Zsh already installed"
-  fi
+  # Install Oh My Zsh (unattended)
+  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  else
+    log_info "Oh My Zsh already installed"
+  fi
 
-  # Set zsh as default shell if not already
-  current_shell=$(getent passwd "$USER" | cut -d: -f7)
-  zsh_path=$(command -v zsh)
-  if [[ "$current_shell" != "$zsh_path" ]]; then
-    chsh -s "$zsh_path"
-    log_info "Default shell changed to Zsh"
-  else
-    log_info "Zsh already default shell"
-  fi
+  # Set zsh as default shell if not already
+  current_shell=$(getent passwd "$USER" | cut -d: -f7)
+  zsh_path=$(command -v zsh)
+  if [[ "$current_shell" != "$zsh_path" ]]; then
+    chsh -s "$zsh_path"
+    log_info "Default shell changed to Zsh"
+  else
+    log_info "Zsh already default shell"
+  fi
 
-  # Backup existing .zshrc first
-  cp -n ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S) || true
+  # Backup existing .zshrc first
+  cp -n ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S) || true
 
-  # Create a minimal .zshrc with plugins and Oh My Posh config
-  cat >~/.zshrc <<'EOF'
+  # Create a minimal .zshrc with plugins and Oh My Posh config
+  cat >~/.zshrc <<'EOF'
 # Path to Oh My Zsh installation
 export ZSH="$HOME/.oh-my-zsh"
 
 # Load Oh My Zsh framework
-ZSH_THEME=""  # Theme disabled, using Oh My Posh instead
+ZSH_THEME=""  # Theme disabled, using Oh My Posh instead
 
 plugins=(
-    git
-    zsh-autosuggestions
-    zsh-syntax-highlighting
-    fast-syntax-highlighting
-    zsh-autocomplete
+    git
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    fast-syntax-highlighting
+    zsh-autocomplete
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -311,36 +311,36 @@ source $ZSH/oh-my-zsh.sh
 eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"
 EOF
 
-  log_info ".zshrc updated with Oh My Zsh plugins and Oh My Posh prompt configuration"
+  log_info ".zshrc updated with Oh My Zsh plugins and Oh My Posh prompt configuration"
 
-  # Install Oh My Posh binary (latest Linux AMD64 stable release)
-  OMP_BIN_PATH="$HOME/.local/bin/oh-my-posh"
-  mkdir -p "$(dirname "$OMP_BIN_PATH")"
-  OMP_DOWNLOAD_URL=$(curl -s https://ohmyposh.dev/install.sh | bash -s -- -d ~/bin | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
-  wget -qO "$OMP_BIN_PATH" "$OMP_DOWNLOAD_URL"
-  chmod +x "$OMP_BIN_PATH"
-  log_info "Oh My Posh binary installed to $OMP_BIN_PATH"
+  # --- START: CORRECTED CODE ---
+  # Install Oh My Posh binary using the official, robust installer script
+  log_info "Installing Oh My Posh binary to ~/.local/bin..."
+  mkdir -p "$HOME/.local/bin"
+  curl -s https://ohmyposh.dev/install.sh | bash -s -- -d "$HOME/.local/bin"
+  log_info "Oh My Posh binary installed."
+  # --- END: CORRECTED CODE ---
 
-  # Download 'atomic' Oh My Posh theme JSON
-  mkdir -p ~/.poshthemes
-  if [ ! -f ~/.poshthemes/atomic.omp.json ]; then
-    wget -q -O ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
-    log_info "'atomic' Oh My Posh theme downloaded"
-  else
-    log_info "'atomic' Oh My Posh theme already exists"
-  fi
+  # Download 'atomic' Oh My Posh theme JSON
+  mkdir -p ~/.poshthemes
+  if [ ! -f ~/.poshthemes/atomic.omp.json ]; then
+    wget -q -O ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
+    log_info "'atomic' Oh My Posh theme downloaded"
+  else
+    log_info "'atomic' Oh My Posh theme already exists"
+  fi
 
-  # Ensure ~/.local/bin is in PATH for future sessions
-  if ! grep -q 'export PATH=$HOME/.local/bin:$PATH' ~/.zshrc; then
-    echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc
-    log_info "Added ~/.local/bin to PATH in .zshrc"
-  fi
+  # Ensure ~/.local/bin is in PATH for future sessions
+  if ! grep -q 'export PATH=$HOME/.local/bin:$PATH' ~/.zshrc; then
+    echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc
+    log_info "Added ~/.local/bin to PATH in .zshrc"
+  fi
 
-  step_end "Zsh with Oh My Zsh and Oh My Posh prompt installed and configured"
+  step_end "Zsh with Oh My Zsh and Oh My Posh prompt installed and configured"
 
 else
 
-  log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
+  log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
 
 fi
 
