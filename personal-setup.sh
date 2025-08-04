@@ -179,9 +179,6 @@ while true; do
   esac
 
   echo ""
-  if confirm "Would you like to install drivers for another GPU (useful for hybrid setups)?"; then
-    continue
-  else
     break
   fi
 done
@@ -190,7 +187,7 @@ step_end "GPU Drivers Installation Completed"
 # === Multimedia codecs installation ===
 step_start "🎵 Installing multimedia codecs (audio, video, DVD, MP3, etc.)"
 sudo apt install -y ubuntu-restricted-extras libdvd-pkg
-sudo dpkg-reconfigure libdvd-pkg -f noninteractive
+sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure libdvd-pkg
 step_end "Multimedia codecs installed — enjoy smooth playback."
 
 # === Set hostname ===
@@ -383,7 +380,7 @@ while true; do
       log_info "You chose GNOME."
       step_start "Installing GNOME Customization Applications"
       sudo apt install -y gnome-tweaks
-      flatpak install --non-interactive flathub com.mattjakeman.ExtensionManager || log_warn "Flatpak not installed or failed"
+      flatpak install --noninteractive flathub com.mattjakeman.ExtensionManager || log_warn "Flatpak not installed or failed"
       step_end "GNOME Customization installation"
       break
       ;;
