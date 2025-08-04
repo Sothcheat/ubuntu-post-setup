@@ -22,60 +22,60 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # === Functions ===
-log_info()    { echo -e "${GREEN}✅ [INFO]${NC} $*"; }
-log_warn()    { echo -e "${YELLOW}⚠️ [WARN]${NC} $*"; }
-log_error()   { echo -e "${RED}❌ [ERROR]${NC} $*" >&2; }
-log_prompt()  { echo -ne "${BLUE}❓ [INPUT]${NC} $*"; }
+log_info() { echo -e "${GREEN}✅ [INFO]${NC} $*"; }
+log_warn() { echo -e "${YELLOW}⚠️ [WARN]${NC} $*"; }
+log_error() { echo -e "${RED}❌ [ERROR]${NC} $*" >&2; }
+log_prompt() { echo -ne "${BLUE}❓ [INPUT]${NC} $*"; }
 
 confirm() {
-  while true; do
-    log_prompt "$1 [y/n]: "
-    read -r ans
-    case "$ans" in
-      [Yy]*) return 0 ;;
-      [Nn]*) return 1 ;;
-      *) echo "Please answer y or n." ;;
-    esac
-  done
+	while true; do
+		log_prompt "$1 [y/n]: "
+		read -r ans
+		case "$ans" in
+		[Yy]*) return 0 ;;
+		[Nn]*) return 1 ;;
+		*) echo "Please answer y or n." ;;
+		esac
+	done
 }
 
 check_internet() {
-  log_info "🌐 Checking internet connectivity..."
-  if ! ping -c1 -W2 8.8.8.8 &>/dev/null; then
-    log_error "No internet connectivity detected. Please check your network."
-    exit 1
-  fi
-  log_info "🌐 Internet connectivity confirmed."
+	log_info "🌐 Checking internet connectivity..."
+	if ! ping -c1 -W2 8.8.8.8 &>/dev/null; then
+		log_error "No internet connectivity detected. Please check your network."
+		exit 1
+	fi
+	log_info "🌐 Internet connectivity confirmed."
 }
 
 choose_option() {
-  local prompt="$1"
-  shift
-  local options=("$@")
-  local opt
-  while true; do
-    echo -e "${CYAN}📋 ${prompt}${NC}"
-    for i in "${!options[@]}"; do
-      echo " $((i+1))) ${options[$i]}"
-    done
-    log_prompt "➡️ Enter choice [1-${#options[@]}]: "
-    read -r opt
-    if [[ "$opt" =~ ^[1-9][0-9]*$ ]] && (( opt >= 1 && opt <= ${#options[@]} )); then
-      echo "${options[$((opt-1))]}"
-      return 0
-    fi
-    echo "❗ Invalid option. Try again."
-  done
+	local prompt="$1"
+	shift
+	local options=("$@")
+	local opt
+	while true; do
+		echo -e "${CYAN}📋 ${prompt}${NC}"
+		for i in "${!options[@]}"; do
+			echo " $((i + 1))) ${options[$i]}"
+		done
+		log_prompt "➡️ Enter choice [1-${#options[@]}]: "
+		read -r opt
+		if [[ "$opt" =~ ^[1-9][0-9]*$ ]] && ((opt >= 1 && opt <= ${#options[@]})); then
+			echo "${options[$((opt - 1))]}"
+			return 0
+		fi
+		echo "❗ Invalid option. Try again."
+	done
 }
 
 step_start() {
-  echo -e "\n${CYAN}🔧 ==> Starting: $* ...${NC}"
-  date +"[%Y-%m-%d %H:%M:%S] Starting: $*" >> "$LOGFILE"
+	echo -e "\n${CYAN}🔧 ==> Starting: $* ...${NC}"
+	date +"[%Y-%m-%d %H:%M:%S] Starting: $*" >>"$LOGFILE"
 }
 
 step_end() {
-  echo -e "${CYAN}✔️ ==> Completed: $*${NC}\n"
-  date +"[%Y-%m-%d %H:%M:%S] Completed: $*" >> "$LOGFILE"
+	echo -e "${CYAN}✔️ ==> Completed: $*${NC}\n"
+	date +"[%Y-%m-%d %H:%M:%S] Completed: $*" >>"$LOGFILE"
 }
 
 # === Start Script ===
@@ -103,7 +103,7 @@ step_end "Flathub Flatpak repository enabled"
 
 # === Add Microsoft VS Code Repository ===
 step_start "📦 Adding Microsoft VS Code repository"
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >packages.microsoft.gpg
 sudo install -o root -g root -m 644 packages.microsoft.gpg /usr/share/keyrings/
 echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list
 sudo apt update
@@ -122,62 +122,62 @@ echo "Note: Installing drivers may take some minutes."
 echo "You can run this multiple times if you have multiple GPUs (e.g., Intel + NVIDIA)."
 
 while true; do
-  echo -e "\nSelect your GPU brand:"
-  echo " 1) NVIDIA"
-  echo " 2) AMD"
-  echo " 3) Intel"
-  echo " 4) None / Skip GPU driver installation"
-  log_prompt "Enter choice [1-4]: "
-  read -r gpu_choice
+	echo -e "\nSelect your GPU brand:"
+	echo " 1) NVIDIA"
+	echo " 2) AMD"
+	echo " 3) Intel"
+	echo " 4) None / Skip GPU driver installation"
+	log_prompt "Enter choice [1-4]: "
+	read -r gpu_choice
 
-  case "$gpu_choice" in
-    1)
-      log_info "You chose NVIDIA GPU."
-      echo "⚠️ NVIDIA driver installation may take time while kernel modules build."
-      if confirm "Proceed with NVIDIA driver installation?"; then
-        step_start "Installing NVIDIA drivers"
-        sudo ubuntu-drivers autoinstall
-        sudo systemctl enable --now nvidia-persistenced || true
-        log_info "✅ NVIDIA drivers installed."
-        step_end "NVIDIA drivers installation"
-      else
-        log_warn "Skipped NVIDIA driver installation."
-      fi
-      ;;
-    2)
-      log_info "You chose AMD GPU."
-      echo "⚠️ AMD Mesa and Vulkan drivers installation may take a couple of minutes."
-      if confirm "Proceed with AMD driver installation?"; then
-        step_start "Installing AMD GPU drivers"
-        sudo apt install -y mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers mesa-utils
-        log_info "✅ AMD GPU drivers installed."
-        step_end "AMD drivers installation"
-      else
-        log_warn "Skipped AMD driver installation."
-      fi
-      ;;
-    3)
-      log_info "You chose Intel integrated GPU."
-      echo "⚠️ Intel drivers and media acceleration installation may take a minute."
-      if confirm "Proceed with Intel driver installation?"; then
-        step_start "Installing Intel GPU drivers"
-        sudo apt install -y mesa-va-drivers intel-media-va-driver i965-va-driver-shaders vainfo vulkan-utils
-        log_info "✅ Intel GPU drivers installed."
-        step_end "Intel drivers installation"
-      else
-        log_warn "Skipped Intel driver installation."
-      fi
-      ;;
-    4)
-      log_warn "Skipping GPU driver installation as requested."
-      break
-      ;;
-    *)
-      echo "❌ Invalid option. Please enter a number between 1 and 4."
-      continue
-      ;;
-  esac
-  break
+	case "$gpu_choice" in
+	1)
+		log_info "You chose NVIDIA GPU."
+		echo "⚠️ NVIDIA driver installation may take time while kernel modules build."
+		if confirm "Proceed with NVIDIA driver installation?"; then
+			step_start "Installing NVIDIA drivers"
+			sudo ubuntu-drivers autoinstall
+			sudo systemctl enable --now nvidia-persistenced || true
+			log_info "✅ NVIDIA drivers installed."
+			step_end "NVIDIA drivers installation"
+		else
+			log_warn "Skipped NVIDIA driver installation."
+		fi
+		;;
+	2)
+		log_info "You chose AMD GPU."
+		echo "⚠️ AMD Mesa and Vulkan drivers installation may take a couple of minutes."
+		if confirm "Proceed with AMD driver installation?"; then
+			step_start "Installing AMD GPU drivers"
+			sudo apt install -y mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers mesa-utils
+			log_info "✅ AMD GPU drivers installed."
+			step_end "AMD drivers installation"
+		else
+			log_warn "Skipped AMD driver installation."
+		fi
+		;;
+	3)
+		log_info "You chose Intel integrated GPU."
+		echo "⚠️ Intel drivers and media acceleration installation may take a minute."
+		if confirm "Proceed with Intel driver installation?"; then
+			step_start "Installing Intel GPU drivers"
+			sudo apt install -y mesa-va-drivers intel-media-va-driver i965-va-driver-shaders vainfo vulkan-utils
+			log_info "✅ Intel GPU drivers installed."
+			step_end "Intel drivers installation"
+		else
+			log_warn "Skipped Intel driver installation."
+		fi
+		;;
+	4)
+		log_warn "Skipping GPU driver installation as requested."
+		break
+		;;
+	*)
+		echo "❌ Invalid option. Please enter a number between 1 and 4."
+		continue
+		;;
+	esac
+	break
 done
 step_end "GPU Drivers Installation Completed"
 
@@ -194,671 +194,354 @@ step_end "Hostname set"
 
 # === Essential applications install (includes Zen Browser via Flatpak and Ghostty) ===
 
-
-
 if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord, Kate, VLC, Ghostty)?"; then
 
+	step_start "📥 Installing essential applications"
 
-  step_start "📥 Installing essential applications"
+	# Install curl first (required for Ghostty)
+	if ! command -v curl &>/dev/null; then
+		sudo apt install -y curl
+	fi
 
+	# Install Zen Browser via Flatpak
 
-  # Install curl first (required for Ghostty)
-    if ! command -v curl &>/dev/null; then
-        sudo apt install -y curl
-    fi
+	sudo flatpak install --noninteractive flathub app.zen_browser.zen
 
+	sudo apt remove -y firefox
 
-  # Install Zen Browser via Flatpak
+	# Install other apps via apt
 
+	sudo apt install -y kate vlc
 
-  sudo flatpak install --noninteractive flathub app.zen_browser.zen
+	# Install Telegram-desktop and Discord via flatpak
+	flatpak install --noninteractive flathub org.telegram.desktop
+	flatpak install --noninteractive flathub com.discordapp.Discord
 
+	# Install Ghostty
+	sudo snap install -y ghostty --classic
 
-  sudo apt remove -y firefox
-
-  # Install other apps via apt
-
-  sudo apt install -y kate vlc
-
-  # Install Telegram-desktop and Discord via flatpak
-  flatpak install --noninteractive flathub org.telegram.desktop
-  flatpak install --noninteractive flathub com.discordapp.Discord
-
-  # Install Ghostty
-  # Update and install dependencies
-  sudo apt update
-  sudo apt install -y git golang-go
-
-  # Set GOPATH if not set (optional, default is $HOME/go)
-  export GOPATH=$HOME/go
-  export PATH=$PATH:$GOPATH/bin
-
-  # Clone ghostty repository
-  git clone https://github.com/ghostty/ghostty.git
-  cd ghostty || exit
-
-  # Build the project
-  go build
-
-  # Optionally move executable to /usr/local/bin for global use
-  sudo mv ghostty /usr/local/bin/
-
-  # Verify installation
-  if command -v ghostty &> /dev/null
-  then
-      echo "ghostty installed successfully"
-      ghostty --version
-  else
-      echo "ghostty installation failed"
-  fi
-
+fi
 # === Fonts (FiraCode Nerd Font) ===
-
 
 if confirm "🔤 Install FiraCode Nerd Font (programming-friendly font)?"; then
 
+	step_start "📚 Installing FiraCode Nerd Font"
 
-  step_start "📚 Installing FiraCode Nerd Font"
+	mkdir -p ~/.local/share/fonts
 
+	curl -Lf -o ~/.local/share/fonts/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
 
-  mkdir -p ~/.local/share/fonts
+	unzip -o ~/.local/share/fonts/FiraCode.zip -d ~/.local/share/fonts/FiraCode
 
+	fc-cache -fv
 
-  curl -Lf -o ~/.local/share/fonts/FiraCode.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip
-
-
-  unzip -o ~/.local/share/fonts/FiraCode.zip -d ~/.local/share/fonts/FiraCode
-
-
-  fc-cache -fv
-
-
-  step_end "FiraCode Nerd Font installed"
-
+	step_end "FiraCode Nerd Font installed"
 
 else
 
-
-  log_warn "Skipped FiraCode Nerd Font installation"
-
+	log_warn "Skipped FiraCode Nerd Font installation"
 
 fi
-
-
-
-
 
 # === Zsh with Oh My Zsh and Oh My Posh prompt ===
 
-
 if confirm "🛠️ Install and configure Zsh shell with Oh My Zsh and Oh My Posh prompt?"; then
 
+	step_start "⚙️ Installing Zsh, Oh My Zsh and Oh My Posh prompt setup"
 
-  step_start "⚙️ Installing Zsh, Oh My Zsh and Oh My Posh prompt setup"
+	# Install Zsh and dependencies
 
+	sudo apt install -y zsh curl unzip wget
 
+	# Install Oh My Zsh (unattended)
 
+	if [ ! -d "${HOME}/.oh-my-zsh" ]; then
 
+		sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
-  # Install Zsh and dependencies
+	else
 
+		log_info "Oh My Zsh already installed"
 
-  sudo apt install -y zsh curl unzip wget
+	fi
 
+	# Set zsh as default shell if not already
 
+	current_shell=$(getent passwd "$USER" | cut -d: -f7)
 
+	zsh_path=$(command -v zsh)
 
+	if [[ "$current_shell" != "$zsh_path" ]]; then
 
-  # Install Oh My Zsh (unattended)
+		chsh -s "$zsh_path"
 
+		log_info "Default shell changed to Zsh"
 
-  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
+	else
 
+		log_info "Zsh already default shell"
 
-    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+	fi
 
+	# Backup existing .zshrc first
 
-  else
+	cp -n ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S) || true
 
+	# Create a minimal .zshrc with embedded plugin list and Oh My Zsh basics,
 
-    log_info "Oh My Zsh already installed"
+	# plus Oh My Posh configuration to replace prompt
 
-
-  fi
-
-
-
-
-
-  # Set zsh as default shell if not already
-
-
-  current_shell=$(getent passwd "$USER" | cut -d: -f7)
-
-
-  zsh_path=$(command -v zsh)
-
-
-  if [[ "$current_shell" != "$zsh_path" ]]; then
-
-
-    chsh -s "$zsh_path"
-
-
-    log_info "Default shell changed to Zsh"
-
-
-  else
-
-
-    log_info "Zsh already default shell"
-
-
-  fi
-
-
-
-
-
-  # Backup existing .zshrc first
-
-
-  cp -n ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S) || true
-
-
-
-
-
-  # Create a minimal .zshrc with embedded plugin list and Oh My Zsh basics,
-
-
-  # plus Oh My Posh configuration to replace prompt
-
-
-
-
-
-  cat > ~/.zshrc <<'EOF'
-
+	cat >~/.zshrc <<'EOF'
 
 # Path to Oh My Zsh installation
 
-
 export ZSH="$HOME/.oh-my-zsh"
-
-
-
-
 
 # Load Oh My Zsh framework
 
-
 ZSH_THEME=""  # Theme disabled, using Oh My Posh instead
-
-
-
-
 
 # Plugins as per gist from https://gist.github.com/n1snt/454b879b8f0b7995740ae04c5fb5b7df
 
-
 plugins=(
-
-
     git 
-
-
     zsh-autosuggestions 
-
-
     zsh-syntax-highlighting 
-
-
     fast-syntax-highlighting 
-
-
     zsh-autocomplete
-
-
 )
-
-
-
-
 
 source $ZSH/oh-my-zsh.sh
 
-
-
-
-
 # Load Oh My Posh prompt
-
 
 eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"
 
-
-
-
-
 EOF
 
+	log_info ".zshrc updated with Oh My Zsh plugins and Oh My Posh prompt configuration"
 
+	# Install Oh My Posh binary (latest Linux AMD64 stable release)
 
+	OMP_BIN_PATH="$HOME/.local/bin/oh-my-posh"
 
+	mkdir -p "$(dirname "$OMP_BIN_PATH")"
 
-  log_info ".zshrc updated with Oh My Zsh plugins and Oh My Posh prompt configuration"
+	OMP_DOWNLOAD_URL=$(curl -s https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
 
+	wget -qO "$OMP_BIN_PATH" "$OMP_DOWNLOAD_URL"
 
+	chmod +x "$OMP_BIN_PATH"
 
+	log_info "Oh My Posh binary installed to $OMP_BIN_PATH"
 
+	# Download 'atomic' Oh My Posh theme JSON
 
-  # Install Oh My Posh binary (latest Linux AMD64 stable release)
+	mkdir -p ~/.poshthemes
 
+	if [ ! -f ~/.poshthemes/atomic.omp.json ]; then
 
+		wget -q -O ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
 
+		log_info "'atomic' Oh My Posh theme downloaded"
 
+	else
 
-  OMP_BIN_PATH="$HOME/.local/bin/oh-my-posh"
+		log_info "'atomic' Oh My Posh theme already exists"
 
+	fi
 
-  mkdir -p "$(dirname "$OMP_BIN_PATH")"
+	# Ensure ~/.local/bin is in PATH for future sessions
 
+	if ! grep -q 'export PATH=$HOME/.local/bin:$PATH' ~/.zshrc; then
 
+		echo 'export PATH=$HOME/.local/bin:$PATH' >>~/.zshrc
 
+		log_info "Added ~/.local/bin to PATH in .zshrc"
 
+	fi
 
-  OMP_DOWNLOAD_URL=$(curl -s https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
-
-
-  wget -qO "$OMP_BIN_PATH" "$OMP_DOWNLOAD_URL"
-
-
-  chmod +x "$OMP_BIN_PATH"
-
-
-  log_info "Oh My Posh binary installed to $OMP_BIN_PATH"
-
-
-
-
-
-  # Download 'atomic' Oh My Posh theme JSON 
-
-
-  mkdir -p ~/.poshthemes
-
-
-  if [ ! -f ~/.poshthemes/atomic.omp.json ]; then
-
-
-    wget -q -O ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
-
-
-    log_info "'atomic' Oh My Posh theme downloaded"
-
-
-  else
-
-
-    log_info "'atomic' Oh My Posh theme already exists"
-
-
-  fi
-
-
-
-
-
-  # Ensure ~/.local/bin is in PATH for future sessions
-
-
-  if ! grep -q 'export PATH=$HOME/.local/bin:$PATH' ~/.zshrc; then
-
-
-    echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc
-
-
-    log_info "Added ~/.local/bin to PATH in .zshrc"
-
-
-  fi
-
-
-
-
-
-  step_end "Zsh with Oh My Zsh and Oh My Posh prompt installed and configured"
-
-
-
-
+	step_end "Zsh with Oh My Zsh and Oh My Posh prompt installed and configured"
 
 else
 
-
-  log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
-
+	log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
 
 fi
-
-
-
-
 
 # === Ghostty terminal configuration ===
 
-
 step_start "🖥️ Configuring Ghostty terminal"
-
-
-
-
 
 GHOSTTY_CONFIG_DIR="$HOME/.config/ghostty"
 
-
 GHOSTTY_CONFIG_FILE="$GHOSTTY_CONFIG_DIR/config"
-
 
 mkdir -p "$GHOSTTY_CONFIG_DIR"
 
-
-
-
-
-cat > "$GHOSTTY_CONFIG_FILE" <<EOF
-
+cat >"$GHOSTTY_CONFIG_FILE" <<EOF
 
 font-family = FiraCode Nerd Font
-
-
 font-size = 14
-
-
 background-opacity = 0.9
-
-
 theme = Everforest Dark - Hard
-
 
 EOF
 
-
-
-
-
 log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
-
 
 step_end "Ghostty terminal configured"
 
-
-
-
-
 # === Developer Tools ===
-
 
 if confirm "🖥️ Install development tools and languages (build-essential, git, python3, openjdk, nodejs, podman, docker)?"; then
 
+	step_start "📦 Installing development tools and languages"
 
-  step_start "📦 Installing development tools and languages"
+	sudo apt install -y build-essential git python3-pip openjdk-21-jdk nodejs npm podman docker.io
 
+	sudo systemctl enable --now docker
 
-  sudo apt install -y build-essential git python3-pip openjdk-21-jdk nodejs npm podman docker.io
-
-
-  sudo systemctl enable --now docker
-
-
-  step_end "Development tools installed"
-
+	step_end "Development tools installed"
 
 else
 
-
-  log_warn "Skipped developer tools installation"
-
+	log_warn "Skipped developer tools installation"
 
 fi
-
-
-
-
 
 # === IDEs Installation ===
 
+if confirm "🖥️ Install developer IDEs (Visual Studio Code, IntelliJ IDEA Community, and NetBeans)?"; then
 
-if confirm "🖥️ Install developer IDEs (Visual Studio Code, IntelliJ IDEA Community, and NetBeans)?" ; then
+	step_start "📦 Installing developer IDEs"
 
+	# VS Code via apt (repo already added earlier)
 
-  step_start "📦 Installing developer IDEs"
+	sudo apt install -y code
 
+	# IntelliJ IDEA Community Edition via Flatpak
 
+	sudo flatpak install --noninteractive flathub org.jetbrains.IntelliJ-IDEA-Community
 
+	# NetBeans IDE via Flatpak
 
+	sudo flatpak install --noninteractive flathub org.apache.netbeans
 
-  # VS Code via apt (repo already added earlier)
-
-
-  sudo apt install -y code
-
-
-
-
-
-  # IntelliJ IDEA Community Edition via Flatpak
-
-
-  sudo flatpak install --noninteractive flathub org.jetbrains.IntelliJ-IDEA-Community
-
-
-
-
-
-  # NetBeans IDE via Flatpak
-
-
-  sudo flatpak install --noninteractive flathub org.apache.netbeans
-
-
-
-
-
-  step_end "Developer IDEs installed"
-
+	step_end "Developer IDEs installed"
 
 else
 
-
-  log_warn "Skipped developer IDEs installation"
-
+	log_warn "Skipped developer IDEs installation"
 
 fi
-
-
-
-
 
 # === Desktop Customization ===
 
-
 step_start "🎨 Customize Ubuntu"
-
 
 echo "Pick your Desktop Environment you're running on."
 
-
-
-
-
 while true; do
 
+	echo -e "\nSelect your Desktop Environment:"
 
-  echo -e "\nSelect your Desktop Environment:"
+	echo " 1) GNOME"
 
+	echo " 2) KDE Plasma"
 
-  echo " 1) GNOME"
+	echo " 3) Skip customization"
 
+	log_prompt "Enter choice [1-3]: "
 
-  echo " 2) KDE Plasma"
+	read -r de_choice
 
+	case "$de_choice" in
 
-  echo " 3) Skip customization"
+	1)
 
+		log_info "You chose GNOME."
 
-  log_prompt "Enter choice [1-3]: "
+		step_start "Installing GNOME Customization Applications"
 
+		sudo apt install -y gnome-tweaks
 
-  read -r de_choice
+		flatpak install --noninteractive flathub com.mattjakeman.ExtensionManager || log_warn "Flatpak not installed or failed"
 
+		step_end "GNOME Customization installation"
 
-  case "$de_choice" in
+		break
 
+		;;
 
-    1)
+	2)
 
+		log_info "You chose KDE Plasma."
 
-      log_info "You chose GNOME."
+		step_start "Installing KDE Plasma Customization Applications"
 
+		sudo apt install -y kvantum
 
-      step_start "Installing GNOME Customization Applications"
+		step_end "KDE Plasma Customization installation"
 
+		break
 
-      sudo apt install -y gnome-tweaks
+		;;
 
+	3)
 
-      flatpak install --noninteractive flathub com.mattjakeman.ExtensionManager || log_warn "Flatpak not installed or failed"
+		log_warn "Skipping customization as requested."
 
+		break
 
-      step_end "GNOME Customization installation"
+		;;
 
+	*)
 
-      break
+		echo "❌ Invalid option. Please enter a number between 1 and 3."
 
+		;;
 
-      ;;
-
-
-    2)
-
-
-      log_info "You chose KDE Plasma."
-
-
-      step_start "Installing KDE Plasma Customization Applications"
-
-
-      sudo apt install -y kvantum
-
-
-      step_end "KDE Plasma Customization installation"
-
-
-      break
-
-
-      ;;
-
-
-    3)
-
-
-      log_warn "Skipping customization as requested."
-
-
-      break
-
-
-      ;;
-
-
-    *)
-
-
-      echo "❌ Invalid option. Please enter a number between 1 and 3."
-
-
-      ;;
-
-
-  esac
-
+	esac
 
 done
 
-
 step_end "Desktop Customization completed."
-
-
-
-
 
 # === Faster boot optimization ===
 
-
 if confirm "⚡ Disable NetworkManager-wait-online.service for faster boot?"; then
 
+	step_start "Disabling NetworkManager-wait-online.service"
 
-  step_start "Disabling NetworkManager-wait-online.service"
+	sudo systemctl disable NetworkManager-wait-online.service
 
-
-  sudo systemctl disable NetworkManager-wait-online.service
-
-
-  step_end "Disabled NetworkManager-wait-online.service"
-
+	step_end "Disabled NetworkManager-wait-online.service"
 
 else
 
-
-  log_warn "Skipped disabling NetworkManager-wait-online.service"
-
+	log_warn "Skipped disabling NetworkManager-wait-online.service"
 
 fi
 
-
-
-
-
 # === Enable firewall ===
-
 
 step_start "🔥 Enabling UFW firewall"
 
-
 sudo ufw --force enable
-
 
 step_end "Firewall enabled"
 
-
-
-
-
 # === Fonts and archive utilities ===
-
 
 step_start "📂 Installing fonts and archive utilities"
 
-
 sudo apt install -y cabextract fontconfig p7zip-full p7zip-rar unrar unzip
-
 
 step_end "Fonts and archive utilities installed"
 
-
-
-
-
 # === Final Message ===
 
-
 log_info "🎉 Ubuntu 25.04 post-install setup completed. Please reboot if needed."
-
-
-
-
 
 exit 0
