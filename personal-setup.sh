@@ -497,9 +497,8 @@ echo "Pick your Desktop Environment you're running on."
 while true; do
   echo -e "\nSelect your Desktop Environment:"
   echo " 1) GNOME"
-  echo " 2) KDE Plasma"
-  echo " 3) Skip customization"
-  log_prompt "Enter choice [1-3]: "
+  echo " 2) Skip customization"
+  log_prompt "Enter choice [1-2]: "
   read -r de_choice
 
   case "$de_choice" in
@@ -512,13 +511,6 @@ while true; do
       break
       ;;
     2)
-      log_info "You chose KDE Plasma."
-      step_start "Installing KDE Plasma Customization Applications"
-      sudo apt install -y kvantum kde-config-gtk-style
-      step_end "KDE Plasma Customization installation"
-      break
-      ;;
-    3)
       log_warn "Skipping customization as requested."
       break
       ;;
