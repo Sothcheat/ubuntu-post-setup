@@ -202,7 +202,10 @@ if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord,
   step_start "📥 Installing essential applications"
 
 
-
+  # Install curl first (required for Ghostty)
+    if ! command -v curl &>/dev/null; then
+        sudo apt install -y curl
+    fi
 
 
   # Install Zen Browser via Flatpak
