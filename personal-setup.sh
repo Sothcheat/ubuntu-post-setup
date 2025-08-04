@@ -177,11 +177,6 @@ while true; do
       continue
       ;;
   esac
-
-  # Removed unnecessary and unmatched 'if' statement below; it caused an error.
-  # There was a stray 'fi' after this loop.
-
-  # After processing selection once, break to avoid infinite loop
   break
 done
 step_end "GPU Drivers Installation Completed"
