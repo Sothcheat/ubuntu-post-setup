@@ -116,6 +116,7 @@ sudo apt -y upgrade
 step_end "System updated and upgraded"
 
 # === Beginner-Friendly GPU Driver Installation ===
+# === Beginner-Friendly GPU Driver Installation ===
 step_start "🖥️ GPU Drivers Installation"
 echo "Welcome! Please select your GPU brand to install the best drivers."
 echo "Note: Installing drivers may take some minutes."
@@ -177,10 +178,7 @@ while true; do
       continue
       ;;
   esac
-
-  echo ""
-    break
-  fi
+  break
 done
 step_end "GPU Drivers Installation Completed"
 
