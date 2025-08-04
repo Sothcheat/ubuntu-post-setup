@@ -216,10 +216,6 @@ if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord,
 
   sudo apt remove -y firefox
 
-
-
-
-
   # Install other apps via apt
 
   sudo apt install -y kate vlc
@@ -228,52 +224,33 @@ if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord,
   flatpak install --noninteractive flathub org.telegram.desktop
   flatpak install --noninteractive flathub com.discordapp.Discord
 
+  # Install Ghostty
+  # Update and install dependencies
+  sudo apt update
+  sudo apt install -y git golang-go
 
+  # Set GOPATH if not set (optional, default is $HOME/go)
+  export GOPATH=$HOME/go
+  export PATH=$PATH:$GOPATH/bin
 
-  # Install Ghostty terminal emulator (no prompt)
+  # Clone ghostty repository
+  git clone https://github.com/ghostty/ghostty.git
+  cd ghostty || exit
 
+  # Build the project
+  go build
 
-  step_start "📦 Installing Ghostty terminal"
+  # Optionally move executable to /usr/local/bin for global use
+  sudo mv ghostty /usr/local/bin/
 
-
-  GHOSTTY_BIN="$HOME/.local/bin/ghostty"
-
-
-  mkdir -p "$(dirname "$GHOSTTY_BIN")"
-
-
-  GHOSTTY_URL=$(curl -s https://github.com/mkasberg/ghostty-ubuntu/releases/latest | grep "browser_download_url.*linux-x86_64" | cut -d '"' -f4)
-
-
-  wget -qO "$GHOSTTY_BIN" "$GHOSTTY_URL"
-
-
-  chmod +x "$GHOSTTY_BIN"
-
-
-  log_info "Ghostty installed to $GHOSTTY_BIN"
-
-
-  step_end "Ghostty terminal installed"
-
-
-
-
-
-  step_end "Essential applications installed"
-
-
-else
-
-
-  log_warn "Skipped installation of essential applications"
-
-
-fi
-
-
-
-
+  # Verify installation
+  if command -v ghostty &> /dev/null
+  then
+      echo "ghostty installed successfully"
+      ghostty --version
+  else
+      echo "ghostty installation failed"
+  fi
 
 # === Fonts (FiraCode Nerd Font) ===
 
