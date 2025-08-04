@@ -242,7 +242,7 @@ if confirm "📦 Install essential applications (Zen Browser, Telegram, Discord,
   mkdir -p "$(dirname "$GHOSTTY_BIN")"
 
 
-  GHOSTTY_URL=$(curl -s https://api.github.com/repos/ghostty-org/ghostty/releases/latest | grep "browser_download_url.*linux-x86_64" | cut -d '"' -f4)
+  GHOSTTY_URL=$(curl -s https://github.com/mkasberg/ghostty-ubuntu/releases/latest | grep "browser_download_url.*linux-x86_64" | cut -d '"' -f4)
 
 
   wget -qO "$GHOSTTY_BIN" "$GHOSTTY_URL"
