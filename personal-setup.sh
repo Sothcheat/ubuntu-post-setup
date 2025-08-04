@@ -316,7 +316,7 @@ EOF
   # Install Oh My Posh binary (latest Linux AMD64 stable release)
   OMP_BIN_PATH="$HOME/.local/bin/oh-my-posh"
   mkdir -p "$(dirname "$OMP_BIN_PATH")"
-  OMP_DOWNLOAD_URL=$(curl -s https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
+  OMP_DOWNLOAD_URL=$(curl -s https://ohmyposh.dev/install.sh | bash -s -- -d ~/bin | grep "browser_download_url.*linux_amd64" | cut -d '"' -f4)
   wget -qO "$OMP_BIN_PATH" "$OMP_DOWNLOAD_URL"
   chmod +x "$OMP_BIN_PATH"
   log_info "Oh My Posh binary installed to $OMP_BIN_PATH"
