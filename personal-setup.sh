@@ -304,23 +304,29 @@ else
 
 fi
 
-# === Zsh with Oh My Zsh and Oh My Posh prompt ===
+# === Zsh with Oh My Zsh and Oh My Posh ===
+if confirm "🛠️ Install and configure Zsh, Oh My Zsh, and Oh My Posh prompt?"; then
+  step_start "⚙️ Installing Zsh, Oh My Zsh, and Oh My Posh"
 
-if confirm "🛠️ Install and configure Zsh shell with Oh My Zsh and Oh My Posh prompt?"; then
-
-  step_start "⚙️ Installing Zsh, Oh My Zsh and Oh My Posh prompt setup"
-
-  sudo apt install -y zsh curl unzip wget git
+  # Install required packages (Ubuntu/Debian)
+  sudo apt update
+  sudo apt install -y zsh curl wget git unzip
 
   # Install Oh My Zsh (unattended)
-  if [ ! -d "${HOME}/.oh-my-zsh" ]; then
-    sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    log_info "Installing Oh My Zsh..."
+    export RUNZSH=no
+    export CHSH=no
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
   else
     log_info "Oh My Zsh already installed"
   fi
 
-  # Install Oh My Zsh plugins
+  # Set ZSH_CUSTOM path
   ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+  
+  # Install Zsh plugins
+  log_info "Installing Zsh plugins..."
   
   # zsh-autosuggestions
   if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
@@ -331,114 +337,185 @@ if confirm "🛠️ Install and configure Zsh shell with Oh My Zsh and Oh My Pos
   if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
   fi
-  
-  # fast-syntax-highlighting
-  if [ ! -d "$ZSH_CUSTOM/plugins/fast-syntax-highlighting" ]; then
-    git clone https://github.com/zdharma-continuum/fast-syntax-highlighting.git "$ZSH_CUSTOM/plugins/fast-syntax-highlighting"
-  fi
-  
-  # zsh-autocomplete
+
+  # zsh-autocomplete (properly configured)
   if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autocomplete" ]; then
-    git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git "$ZSH_CUSTOM/plugins/zsh-autocomplete"
+    git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git "$ZSH_CUSTOM/plugins/zsh-autocomplete"
   fi
 
-  # Set zsh as default shell if not already
-  current_shell=$(getent passwd "$USER" | cut -d: -f7)
-  zsh_path=$(command -v zsh)
-  if [[ "$current_shell" != "$zsh_path" ]]; then
-    chsh -s "$zsh_path"
-    log_info "Default shell changed to Zsh"
-  else
-    log_info "Zsh already default shell"
-  fi
-
-  # Backup existing .zshrc first
-  if [ -f ~/.zshrc ]; then
-    cp ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S)
-  fi
-
-  # Download the .zshrc from the gist
-  log_info "Downloading .zshrc configuration from gist..."
-  wget -q -O ~/.zshrc https://gist.githubusercontent.com/n1snt/454b879b8f0b7995740ae04c5fb5b7df/raw/.zshrc || {
-    log_warn "Failed to download .zshrc from gist, creating custom configuration"
-    
-    # Create a custom .zshrc if download fails
-    cat >~/.zshrc <<'EOF'
-# Path to Oh My Zsh installation
-export ZSH="$HOME/.oh-my-zsh"
-
-# Theme disabled, using Oh My Posh instead
-ZSH_THEME=""
-
-# Plugins
-plugins=(
-    git
-    zsh-autosuggestions
-    zsh-syntax-highlighting
-    fast-syntax-highlighting
-    zsh-autocomplete
-    docker
-    docker-compose
-    sudo
-    command-not-found
-    colored-man-pages
-    colorize
-    cp
-    extract
-)
-
-source $ZSH/oh-my-zsh.sh
-
-# User configuration
-export PATH=$HOME/.local/bin:$PATH
-
-# Aliases
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
-alias ..='cd ..'
-alias ...='cd ../..'
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-
-# Load Oh My Posh prompt
-if command -v oh-my-posh &> /dev/null; then
-    eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"
-fi
-EOF
-  }
-
-  # Install Oh My Posh binary
+  # Install Oh My Posh
   log_info "Installing Oh My Posh..."
-  mkdir -p "$HOME/.local/bin"
+  OMP_BIN_PATH="$HOME/.local/bin/oh-my-posh"
+  mkdir -p "$(dirname "$OMP_BIN_PATH")"
   
-  # Fix: Better Oh My Posh installation
-  if ! command -v oh-my-posh &>/dev/null; then
-    curl -s https://ohmyposh.dev/install.sh | bash -s -- -d "$HOME/.local/bin"
-    chmod +x "$HOME/.local/bin/oh-my-posh"
+  # Get latest Oh My Posh release URL
+  OMP_DOWNLOAD_URL=$(curl -s https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest \
+    | grep "browser_download_url.*posh-linux-amd64" | cut -d '"' -f4)
+  
+  if [[ -n "$OMP_DOWNLOAD_URL" ]]; then
+    curl -Lf -o "$OMP_BIN_PATH" "$OMP_DOWNLOAD_URL"
+    chmod +x "$OMP_BIN_PATH"
+    log_info "Oh My Posh binary installed to $OMP_BIN_PATH"
+  else
+    log_error "Failed to get Oh My Posh download URL"
+    exit 1
   fi
 
   # Download atomic theme
   mkdir -p ~/.poshthemes
-  wget -q -O ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
-
-  # Ensure PATH is set in .zshrc
-  if ! grep -q 'export PATH=$HOME/.local/bin:$PATH' ~/.zshrc; then
-    echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.zshrc
+  if [ ! -f ~/.poshthemes/atomic.omp.json ]; then
+    curl -Lf -o ~/.poshthemes/atomic.omp.json https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/atomic.omp.json
+    log_info "Atomic Oh My Posh theme downloaded"
+  else
+    log_info "Atomic theme already exists"
   fi
 
-  # Add Oh My Posh to .zshrc if not already there
-  if ! grep -q "oh-my-posh init zsh" ~/.zshrc; then
-    echo 'eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"' >> ~/.zshrc
+  # Backup existing .zshrc
+  if [ -f ~/.zshrc ]; then
+    cp ~/.zshrc ~/.zshrc.backup-$(date +%Y%m%d_%H%M%S)
+    log_info "Backed up existing .zshrc"
   fi
 
-  step_end "Zsh with Oh My Zsh and Oh My Posh prompt installed and configured"
+  # Create new .zshrc with FIXED configuration (Ubuntu compatible)
+  cat > ~/.zshrc <<'EOF'
+# Path to Oh My Zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
 
+# Set name of the theme to load
+ZSH_THEME=""
+
+# Uncomment the following line to use case-sensitive completion.
+# CASE_SENSITIVE="true"
+
+# Uncomment the following line to use hyphen-insensitive completion.
+# Case-sensitive completion must be off. _ and - will be interchangeable.
+# HYPHEN_INSENSITIVE="true"
+
+# Uncomment the following line to disable bi-weekly auto-update checks.
+DISABLE_AUTO_UPDATE="true"
+
+# Uncomment the following line to automatically update without prompting.
+# DISABLE_UPDATE_PROMPT="true"
+
+# Uncomment the following line to change how often to auto-update (in days).
+# export UPDATE_ZSH_DAYS=13
+
+# Uncomment the following line if pasting URLs and other text is messed up.
+# DISABLE_MAGIC_FUNCTIONS="true"
+
+# Uncomment the following line to disable colors in ls.
+# DISABLE_LS_COLORS="true"
+
+# Uncomment the following line to disable auto-setting terminal title.
+# DISABLE_AUTO_TITLE="true"
+
+# Uncomment the following line to enable command auto-correction.
+# ENABLE_CORRECTION="true"
+
+# Uncomment the following line to display red dots whilst waiting for completion.
+# Caution: this setting can cause issues with multiline prompts (zsh 5.7.1 and newer seem to work)
+# See https://github.com/ohmyzsh/ohmyzsh/issues/5765
+# COMPLETION_WAITING_DOTS="true"
+
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
+
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# You can set one of the optional three formats:
+# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# or set a custom format using the strftime function format specifications.
+# For more details, see 'man strftime' or search for strftime
+# HIST_STAMPS="mm/dd/yyyy"
+
+# Would you like to use another custom folder than $HOME/.oh-my-zsh/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
+
+# FIXED: zsh-autocomplete is loaded separately AFTER oh-my-zsh
+# Which plugins would you like to load?
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+# Add wisely, as too many plugins slow down shell startup.
+# NOTE: zsh-autocomplete is loaded separately AFTER oh-my-zsh
+plugins=(
+    git
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+)
+
+source $ZSH/oh-my-zsh.sh
+
+# CRITICAL: zsh-autocomplete must be sourced AFTER oh-my-zsh
+# This is the key difference from manual installation
+if [ -f "$ZSH_CUSTOM/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh" ]; then
+    source "$ZSH_CUSTOM/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh"
+fi
+
+# User configuration
+
+# export MANPATH="/usr/local/man:$MANPATH"
+
+# You may need to manually set your language environment
+# export LANG=en_US.UTF-8
+
+# Preferred editor for local and remote sessions
+# if [[ -n $SSH_CONNECTION ]]; then
+#   export EDITOR='vim'
+# else
+#   export EDITOR='mvim'
+# fi
+
+# Compilation flags
+# export ARCHFLAGS="-arch x86_64"
+
+# Set personal aliases, overriding those provided by oh-my-zsh libs,
+# plugins, and themes. Aliases can be placed here, though users
+# are encouraged to define aliases within the ZSH_CUSTOM folder.
+# For a full list of active aliases, run `alias`.
+#
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+
+# Add ~/.local/bin to PATH if it exists
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# FIXED: Add error handling for Oh My Posh initialization
+# Oh My Posh initialization (atomic theme)
+if command -v oh-my-posh &> /dev/null && [ -f ~/.poshthemes/atomic.omp.json ]; then
+    eval "$(oh-my-posh init zsh --config ~/.poshthemes/atomic.omp.json)"
+elif command -v oh-my-posh &> /dev/null; then
+    # Fallback to a built-in theme if atomic.omp.json is missing
+    eval "$(oh-my-posh init zsh)"
+fi
+
+# Custom configurations can be added below this line
+EOF
+
+  log_info ".zshrc configured with Oh My Zsh plugins and Oh My Posh"
+
+  # Change default shell to Zsh
+  current_shell=$(getent passwd "$USER" | cut -d: -f7)
+  zsh_path=$(command -v zsh)
+  if [[ "$current_shell" != "$zsh_path" ]]; then
+    if sudo chsh -s "$zsh_path" "$USER"; then
+      log_info "Default shell changed to Zsh"
+      log_warn "You'll need to log out and back in (or restart) for the shell change to take effect."
+    else
+      log_warn "Failed to change default shell. You can manually run: sudo chsh -s $zsh_path $USER"
+    fi
+  else
+    log_info "Zsh already set as default shell"
+  fi
+
+  step_end "Zsh, Oh My Zsh, and Oh My Posh installed and configured"
 else
-
-  log_warn "Skipped Zsh, Oh My Zsh and Oh My Posh setup"
-
+  log_warn "Skipped Zsh, Oh My Zsh, and Oh My Posh setup"
 fi
 
 # === Ghostty terminal configuration ===
