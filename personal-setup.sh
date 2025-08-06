@@ -443,26 +443,39 @@ fi
 
 # === Ghostty terminal configuration ===
 
-if command -v ghostty &>/dev/null || command -v snap &>/dev/null && snap list 2>/dev/null | grep -q ghostty; then
+if command -v ghostty &> /dev/null; then
   step_start "🖥️ Configuring Ghostty terminal"
 
   GHOSTTY_CONFIG_DIR="$HOME/.config/ghostty"
   GHOSTTY_CONFIG_FILE="$GHOSTTY_CONFIG_DIR/config"
-
   mkdir -p "$GHOSTTY_CONFIG_DIR"
 
-  cat >"$GHOSTTY_CONFIG_FILE" <<EOF
+  cat > "$GHOSTTY_CONFIG_FILE" <<EOF
+# Font configuration
 font-family = FiraCode Nerd Font
 font-size = 14
+
+# Appearance
 background-opacity = 0.9
-theme = Everforest Dark Hard
+theme = Everforest Dark - Hard
+cursor-style = block
+cursor-style-blink = true
+
+# Window settings
+window-padding-x = 4
+window-padding-y = 4
+window-decoration = true
+
+# Terminal behavior
+scrollback-limit = 10000
+mouse-hide-while-typing = true
+
 EOF
 
   log_info "Ghostty config written to $GHOSTTY_CONFIG_FILE"
-
   step_end "Ghostty terminal configured"
 else
-  log_warn "Ghostty not installed, skipping configuration"
+  log_warn "Ghostty not found, skipping configuration"
 fi
 
 # === IDEs Installation ===
